@@ -5,92 +5,99 @@
 
 using namespace std;
 
-bool verifyWordPresence(const vector<string>& wordList, const string& query) {
-    int start = 0;
-    int end = wordList.size() - 1;
+// Quick iterative binary search for exact word matches
+bool isWordPresent(const vector<string>& words, const string& target) {
+    int low = 0;
+    int high = words.size() - 1;
 
-    while (start <= end) {
-        int midpoint = start + (end - start) / 2;
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
 
-        if (wordList[midpoint] == query) {
+        if (words[mid] == target) {
             return true;
         }
-        if (wordList[midpoint] < query) {
-            start = midpoint + 1;
+        if (words[mid] < target) {
+            low = mid + 1;
         } else {
-            end = midpoint - 1;
+            high = mid - 1;
         }
     }
     return false;
 }
 
-void triggerSuggestions(const vector<string>& wordList, const string& characters) {
-    int start = 0;
-    int end = wordList.size() - 1;
-    int locationMarker = -1;
+// Modified binary search to find the lower bound of a prefix and list matches
+void printPrefixMatches(const vector<string>& words, const string& prefix) {
+    int low = 0;
+    int high = words.size() - 1;
+    int firstMatchIdx = -1;
 
-    while (start <= end) {
-        int midpoint = start + (end - start) / 2;
+    // Binary search to locate the *first* index matching the prefix
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
 
-        if (wordList[midpoint].compare(0, characters.length(), characters) == 0) {
-            locationMarker = midpoint;
-            end = midpoint - 1; 
+        if (words[mid].compare(0, prefix.length(), prefix) == 0) {
+            firstMatchIdx = mid;
+            high = mid - 1; // Keep searching left to find the absolute first occurrence
         }
-        else if (wordList[midpoint] < characters) {
-            start = midpoint + 1;
+        else if (words[mid] < prefix) {
+            low = mid + 1;
         } else {
-            end = midpoint - 1;
+            high = mid - 1;
         }
     }
 
-    if (locationMarker == -1) {
-        cout << " No matches found for: " << characters << endl;
+    if (firstMatchIdx == -1) {
+        cout << "No matches found for prefix: " << prefix << endl;
         return;
     }
 
-    cout << " Suggested words:" << endl;
-    for (int i = locationMarker; i < wordList.size(); i++) {
-        if (wordList[i].compare(0, characters.length(), characters) != 0) {
-            break;
+    // Print all consecutive words that share the same prefix
+    cout << "Suggested words:" << endl;
+    for (int i = firstMatchIdx; i < words.size(); i++) {
+        if (words[i].compare(0, prefix.length(), prefix) != 0) {
+            break; 
         }
-        cout << " -> " << wordList[i] << endl;
+        cout << " -> " << words[i] << endl;
     }
 }
 
 int main() {
-    vector<string> wordList = {
+    // Local database of words
+    vector<string> dictionary = {
         "apple", "app", "application", "banana", "band", "bandwidth", 
         "code", "coder", "codeforces", "cpp", "data", "database", 
         "dynamic", "leet", "leetcode", "search", "sorting"
     };
 
-    sort(wordList.begin(), wordList.end());
+    // Ensure database is sorted for binary search operations
+    sort(dictionary.begin(), dictionary.end());
 
-    cout << "--- TEXT SEARCH UTILITY ---" << endl;
+    cout << "=== TEXT UTILITY TOOL ===" << endl;
     
     while (true) {
-        int modeSelection;
-        cout << "\n[1] Check Spelling\n[2] Get Auto-Suggestions\n[3] Quit\nSelection: ";
-        cin >> modeSelection;
+        int choice;
+        cout << "\n1. Spell Check\n2. Auto-Suggestions\n3. Exit\nChoice: ";
+        cin >> choice;
 
-        if (modeSelection == 3) break;
+        if (choice == 3) break;
 
-        if (modeSelection == 1) {
-            string inputWord;
-            cout << "Type word: ";
-            cin >> inputWord;
-            if (verifyWordPresence(wordList, inputWord)) {
-                cout << " Found in database." << endl;
+        if (choice == 1) {
+            string word;
+            cout << "Enter word to check: ";
+            cin >> word;
+            if (isWordPresent(dictionary, word)) {
+                cout << "Valid word found." << endl;
             } else {
-                cout << " Not found." << endl;
+                cout << "Word not found in dictionary." << endl;
             }
         } 
-        else if (modeSelection == 2) {
-            string inputPrefix;
-            cout << "Type starting letters: ";
-            cin >> inputPrefix;
-            triggerSuggestions(wordList, inputPrefix);
+        else if (choice == 2) {
+            string prefix;
+            cout << "Enter prefix characters: ";
+            cin >> prefix;
+            printPrefixMatches(dictionary, prefix);
         }
     }
     return 0;
 }
+//Refactor autocomplete logic for clean boundary checks.
